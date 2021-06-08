@@ -4,17 +4,31 @@
 #include <stdlib.h>
 #include <time.h>
 #include <iostream>
+#include <fstream>
 
 vector<int> _array0;
 vector<int> _array1;
 int _length;
 
-int _currentTry;
-int _currentSize;
 vector<vector<int>> _compResultsMS;
 vector<vector<int>> _swapResultsMS;
+
 vector<vector<int>> _compResultsQS;
 vector<vector<int>> _swapResultsQS;
+
+vector<double> _avgCompMS;
+vector<int> _minCompMS;
+vector<int> _maxCompMS;
+vector<double> _avgSwapMS;
+vector<int> _minSwapMS;
+vector<int> _maxSwapMS;
+
+vector<double> _avgCompQS;
+vector<int> _minCompQS;
+vector<int> _maxCompQS;
+vector<double> _avgSwapQS;
+vector<int> _minSwapQS;
+vector<int> _maxSwapQS;
 
 int _compareCount;
 int _swapCount;
@@ -22,14 +36,12 @@ int _swapCount;
 void Initialize(int length);
 void MergeSort(int* arr, int low, int high);
 void QuickSort(int* arr, int low, int high);
+void CalculateResults();
 void PrintResults();
 void ExportResults();
 
 void DoSorting()
-{
-	_currentSize = 0;
-	_currentTry = 0;
-	
+{	
 	srand((unsigned int)time(NULL));
 
 	for (int size = 50; size <= 2000; size = size + 50)
@@ -76,6 +88,8 @@ void DoSorting()
 		_swapResultsQS.push_back(sizeSwapResultsQS);
 	}
 
+	CalculateResults();
+	
 	PrintResults();
 }
 
@@ -210,23 +224,146 @@ void QuickSort(int* arr, int low, int high)
 	}
 }
 
-void PrintResults()
+double getAverage(vector<int> vec)
+{
+	int sum = 0;
+	
+	for (int i = 0; i < vec.size(); i++)
+	{
+		sum += vec[i];
+	}
+
+	return (double)sum / vec.size();
+}
+
+int getMinimum(vector<int> vec)
+{
+	int min = INT_MAX;
+
+	for (int i = 0; i < vec.size(); i++)
+	{
+		if (min > vec[i])
+			min = vec[i];
+	}
+
+	return min;
+}
+
+int getMaximum(vector<int> vec)
+{
+	int max = INT_MIN;
+
+	for (int i = 0; i < vec.size(); i++)
+	{
+		if (max < vec[i])
+			max = vec[i];
+	}
+
+	return max;
+}
+
+void CalculateResults()
 {
 	for (int i = 0; i < _compResultsMS.size(); i++)
 	{
-		int sum = 0;
-		double avg = 0.0;
-		for (int j = 0; j < _compResultsMS[i].size(); j++)
-		{
-			sum += _compResultsMS[i][j];
-		}
-		avg = (double)sum / _compResultsMS[i].size();
+		_avgCompMS.push_back(getAverage(_compResultsMS[i]));
+		_minCompMS.push_back(getMinimum(_compResultsMS[i]));
+		_maxCompMS.push_back(getMaximum(_compResultsMS[i]));
 
+		_avgSwapMS.push_back(getAverage(_swapResultsMS[i]));
+		_minSwapMS.push_back(getMinimum(_swapResultsMS[i]));
+		_maxSwapMS.push_back(getMaximum(_swapResultsMS[i]));
 	}
-	//TODO
+	
+	for (int i = 0; i < _compResultsQS.size(); i++)
+	{
+		_avgCompQS.push_back(getAverage(_compResultsQS[i]));
+		_minCompQS.push_back(getMinimum(_compResultsQS[i]));
+		_maxCompQS.push_back(getMaximum(_compResultsQS[i]));
+
+		_avgSwapQS.push_back(getAverage(_swapResultsQS[i]));
+		_minSwapQS.push_back(getMinimum(_swapResultsQS[i]));
+		_maxSwapQS.push_back(getMaximum(_swapResultsQS[i]));
+	}
+}
+
+void PrintResults()
+{
+	cout << endl << "*** MERGESORT RESULTS ***" << endl;
+	cout << "---- Compare Count ----";
+	for (int i = 0; i < _avgCompMS.size(); i++)
+	{
+		cout << "Size " << 50 * (i + 1) << "..." << endl;
+		cout << "Average: " << _avgCompMS[i] << endl;
+		cout << "Minimum: " << _minCompMS[i] << endl;
+		cout << "Maximum: " << _maxCompMS[i] << endl;
+	}
+	cout << "---- Swap Count ----";
+	for (int i = 0; i < _avgSwapMS.size(); i++)
+	{
+		cout << "Size " << 50 * (i + 1) << "..." << endl;
+		cout << "Average: " << _avgSwapMS[i] << endl;
+		cout << "Minimum: " << _minSwapMS[i] << endl;
+		cout << "Maximum: " << _maxSwapMS[i] << endl;
+	}
+
+	cout << endl << "*** QUICKSORT RESULTS ***" << endl;
+	cout << "---- Compare Count ----";
+	for (int i = 0; i < _avgCompQS.size(); i++)
+	{
+		cout << "Size " << 50 * (i + 1) << "..." << endl;
+		cout << "Average: " << _avgCompQS[i] << endl;
+		cout << "Minimum: " << _minCompQS[i] << endl;
+		cout << "Maximum: " << _maxCompQS[i] << endl;
+	}
+	cout << "---- Swap Count ----";
+	for (int i = 0; i < _avgSwapQS.size(); i++)
+	{
+		cout << "Size " << 50 * (i + 1) << "..." << endl;
+		cout << "Average: " << _avgSwapQS[i] << endl;
+		cout << "Minimum: " << _minSwapQS[i] << endl;
+		cout << "Maximum: " << _maxSwapQS[i] << endl;
+	}
+
+	//Export results to files
+	ExportResults();
 }
 
 void ExportResults()
 {
-	//TODO
+	ofstream myfile1;
+	myfile1.open("MergeSort_Compare.csv");
+	myfile1 << "Input Size,Average,Minimum,Maximum\n";
+	for (int i = 0; i < _avgCompMS.size(); i++)
+	{
+		myfile1 << 50*(i+1) << "," << _avgCompMS[i] << "," << _minCompMS[i] << "," << _maxCompMS[i] << "\n";
+	}
+	myfile1.close();
+
+	ofstream myfile2;
+	myfile2.open("MergeSort_Swap.csv");
+	myfile2 << "Input Size,Average,Minimum,Maximum\n";
+	for (int i = 0; i < _avgSwapMS.size(); i++)
+	{
+		myfile2 << 50 * (i + 1) << "," << _avgSwapMS[i] << "," << _minSwapMS[i] << "," << _maxSwapMS[i] << "\n";
+	}
+	myfile2.close();
+
+	ofstream myfile3;
+	myfile3.open("QuickSort_Compare.csv");
+	myfile3 << "Input Size,Average,Minimum,Maximum\n";
+	for (int i = 0; i < _avgCompQS.size(); i++)
+	{
+		myfile3 << 50 * (i + 1) << "," << _avgCompQS[i] << "," << _minCompQS[i] << "," << _maxCompQS[i] << "\n";
+	}
+	myfile3.close();
+
+	ofstream myfile4;
+	myfile4.open("QuickSort_Swap.csv");
+	myfile4 << "Input Size,Average,Minimum,Maximum\n";
+	for (int i = 0; i < _avgSwapQS.size(); i++)
+	{
+		myfile4 << 50 * (i + 1) << "," << _avgSwapQS[i] << "," << _minSwapQS[i] << "," << _maxSwapQS[i] << "\n";
+	}
+	myfile4.close();
 }
